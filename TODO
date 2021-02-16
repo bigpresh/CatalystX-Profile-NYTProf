@@ -1,0 +1,8 @@
+Support enabling/disabling at runtime?
+
+Take profiles dir path from config, maybe with a default
+
+Support listing all available profile runs - mostly there
+
+Support requesting a profile run to render - part done, need to render to HTML
+ by running nytprofhtml if it's not already rendered, then serve it up
