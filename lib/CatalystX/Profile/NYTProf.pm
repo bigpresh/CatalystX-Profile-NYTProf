@@ -7,7 +7,6 @@ use Moose::Role;
 use namespace::autoclean;
  
 use CatalystX::InjectComponent;
-#use Devel::NYTProf;
 use Data::UUID;
 use DDP;
 use Path::Tiny;
@@ -23,7 +22,9 @@ after 'setup_finalize' => sub {
     
     # Load Devel::NYTProf, but tell it not to start yet.  It will still want
     # to create an nytprof.out file immediately unless we tell it elsewhere.
-    $ENV{NYTPROF} = "start=no:file=/dev/null";
+    # We also need use_db_sub, because otherwise it can't profile code that
+    # was compiled before Devel::NYTProf loaded.
+    $ENV{NYTPROF} = "start=no:file=/dev/null:use_db_sub=1";
     require Devel::NYTProf;
     $self->log->debug("Loaded Devel::NYTProf");
 
@@ -53,11 +54,6 @@ after 'setup_components' => sub {
 # request from the network, we're about to handle it" point.
 after 'prepare_body' => sub {
     my $c = shift;
-    #p $c;
-    $c->log->debug("prepare_body hook fired, start profiling this request");
-    #p $c->request;
-    $c->log->debug("request method " . $c->request->method);
-    $c->log->debug("request path " . $c->request->path);
 
     # Don't try to profile requests to our profile viewing/managing URLs
     # as that would be a bit silly, wouldn't it?
@@ -74,7 +70,6 @@ after 'prepare_body' => sub {
     $path =~ s{[^a-z0-9]}{_}gi;
     $path .= DateTime->now->strftime('%Y-%m-%d_%H:%M:%S');
     $path .= substr Data::UUID->new->create_str, 0, 8;
-    # FIXME: platform-agnostic paths
     $path = Path::Tiny::path($nytprof_output_dir, $path);
     DB::enable_profile($path);
     $c->log->debug("Profiling this run to $path");
@@ -85,12 +80,12 @@ after 'prepare_body' => sub {
 after 'finalize_body' => sub {
     my $c = shift;
     $c->log->debug("finalize_body fired, stop profiling");
+    # TODO: it should be a no-op to call these if we weren't profiling,
+    # but should double-check that.
     DB::disable_profile();
     DB::finish_profile();
 
 };
 
 
-
- 
 1;

@@ -51,15 +51,7 @@ sub show : Local {
     my $requested_path = $c->request->path;
     $requested_path =~ s{^profile/show/}{};
 
-    # We'll have a request for e.g. /profile/show/GET_foo...../index.html
-    # We'll get the bits after '/profile/show/' in our arguments
-    # We need to know the profile name, which is the first bit, to check
-    # we have it, then we can serve up the content requested
-    my ($profile, $html_path) = split '/', $requested_path;
-    $c->log->debug("Serving HTML for profile $profile");
-    $c->log->debug("Full HTML path requested: $html_path");
-    $c->log->debug("at this point, output dir is $nytprof_output_dir");
-    $c->log->debug("Path is " . $c->request->path);
+    my ($profile, $html_path) = split '/', $requested_path, 2;
 
     my $profile_path = Path::Tiny::path(
         $nytprof_output_dir,
@@ -98,20 +90,7 @@ sub show : Local {
     );
 }
 
-sub profiles : Local {
-    my ($self, $c) = @_;
-    $c->body("TODO: list profiles");
-}
 
-sub enable_profiling : Local {
-    my ($self, $c) = @_;
-    $c->body("TODO: enable / disable profiling");
-}
-sub disable_profiling : Local {
-    my ($self, $c) = @_;
-    $c->body("TODO: enable / disable profiling");
-}
- 
  
 1;
  
