@@ -24,7 +24,7 @@ after 'setup_finalize' => sub {
     # to create an nytprof.out file immediately unless we tell it elsewhere.
     # We also need use_db_sub, because otherwise it can't profile code that
     # was compiled before Devel::NYTProf loaded.
-    $ENV{NYTPROF} = "start=no:file=/dev/null:use_db_sub=1";
+    $ENV{NYTPROF} = "start=no:file=/dev/null:use_db_sub=1:optimize=0:findcaller=1";
     require Devel::NYTProf;
     $self->log->debug("Loaded Devel::NYTProf");
 
@@ -59,8 +59,9 @@ after 'prepare_body' => sub {
     # as that would be a bit silly, wouldn't it?
     return if $c->request->path =~ m{^profile/};
 
-    # Also don't profile requests for static content, for similar reasons
-    return if $c->request->path =~ m{^static/};
+    # Also don't profile requests for static content or favicons, for 
+    # similar reasons
+    return if $c->request->path =~ m{^(static/|favicon.ico)};
 
     # We want to name all profile outputs safely and usefully, encoding
     # the request method, path, and timestamp, and a random number for some
@@ -68,13 +69,14 @@ after 'prepare_body' => sub {
     my $path = $c->request->method . '_' . ($c->request->path || '/');
     $path =~ s{/}{_s_}g;
     $path =~ s{[^a-z0-9]}{_}gi;
-    $path .= DateTime->now->strftime('%Y-%m-%d_%H:%M:%S');
+    $path .= "_t_" . DateTime->now->strftime('%Y-%m-%d_%H:%M:%S');
     $path .= substr Data::UUID->new->create_str, 0, 8;
     $path = Path::Tiny::path($nytprof_output_dir, $path);
     DB::enable_profile($path);
     $c->log->debug("Profiling this run to $path");
     $c->log->debug("nytprof out dir was $nytprof_output_dir");
 };
+
 
 # And finalise it when the request is finished
 after 'finalize_body' => sub {

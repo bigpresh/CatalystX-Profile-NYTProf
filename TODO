@@ -2,7 +2,32 @@ Support enabling/disabling at runtime?
 
 Take profiles dir path from config, maybe with a default
 
-Support listing all available profile runs - mostly there
 
-Support requesting a profile run to render - part done, need to render to HTML
- by running nytprofhtml if it's not already rendered, then serve it up
+add Catalyst::DispatchType::Regex to deps if we need Regex(...) route
+
+I've seen one run actually report what was going on, but mostly not
+
+One example one reported 4.06s spent, about the time the route handler
+executed for, but reports that against the call to DB::enable_profile() 
+in CatalystX::Profile::NYTProf
+Expected to see some time spent in CORE::sleep and some time spent making
+2,000 calls to DateTime->now.
+
+On another test, the time spent was attributed to Catalyst.pm line 2452:
+my $c = $class->context_class->new({ $uploadtmp ? (_uploadtmp => $uploadtmp) : ()});
+
+Maybe need to hook another point to start profiling?
+
+Could use a global :Regex() action that fires then passes, but can't see how
+an action can say "nope, I don't need to do anything with this, go back to
+the dispatcher and see if anything else matches"
+
+Can define init/auto actions, but they're controller-scoped which is no good.
+
+Read https://metacpan.org/pod/release/MRAMBERG/Catalyst-Runtime-5.7001/lib/Catalyst/Manual/WritingPlugins.pod
+maybe turn this into a Cataluyst::Plugin::*, override prepare....
+
+... can the plugin also insert its own controller for the serving?
+maybe see https://metacpan.org/release/Catalyst-Plugin-AutoCRUD/source/lib/Catalyst/Plugin/AutoCRUD.pm
+ - which is a plugin which sets up controllers.
+

@@ -4,8 +4,11 @@ BEGIN {
   $CatalystX::Profile::NYTProf::Controller::ControlProfiling::VERSION = '0.02';
 }
 use Moose;
-use Path::Tiny;
+use Path::Tiny qw(path);
 use namespace::autoclean;
+
+use Devel::NYTProf::Data;
+use File::stat;
  
 BEGIN { extends 'Catalyst::Controller' }
  
@@ -17,6 +20,18 @@ BEGIN { extends 'Catalyst::Controller' }
 my $nytprof_output_dir = 'nytprof_output';
 my $nytprofhtml_path = '/home/davidp/perl5/bin/nytprofhtml';
 
+
+sub auto : Private {
+    my ($self, $c) = @_;
+    $c->log->debug("auto action called");
+}
+
+sub globalregex :Regexp(.+) {
+    my ($self, $c) = @_;
+    $c->log->debug("globalregex fired");
+    return 1;
+}
+
 sub index : Local {
     my ($self, $c) = @_;
     # ICK ICK ICK, get this in a nice template
@@ -27,29 +42,67 @@ sub index : Local {
 
 <h2>Profiled requests...</h2>
 
-<ul>
+<table>
+<tr>
+<th>Datetime</th>
+<th>Method</th>
+<th>Path</th>
+<th>Time taken</th>
+<th>View</th>
+</tr>
 HTML
 
     opendir my $outdir, $nytprof_output_dir
         or die "Failed to opendir $nytprof_output_dir - $!";
-    while (my $filename = readdir $outdir) {
-        next if $filename =~ /^\./;
-        next if $filename eq 'html';
-        my ($method, $title) = split '_', $filename, 2;
+    my @files = grep { $_ !~ /^(\.|html)/ } readdir $outdir;
+    for my $file (
+        sort {
+            (stat path($nytprof_output_dir, $b))->ctime
+            <=>
+            (stat path($nytprof_output_dir, $a))->ctime
+        } @files
+    ) {
+        my $title = $file;
         $title =~ s{_s_}{/}g;
-        $html .= qq{<li><a href="/profile/show/$filename/index.html">$method $title</a></li>};
+        my ($method, $path ,$timestamp, $uuid) = split '_', $title, 4;
+        my $datetime = scalar localtime( (stat path($nytprof_output_dir, $file))->ctime);
+
+        # Get the execution time; do it in an eval in case the profile run
+        # is incomplete/corrupt
+        my $profile;
+        eval {
+            $profile = Devel::NYTProf::Data->new(
+                { filename => path($nytprof_output_dir, $file) },
+            )
+        };
+        my $duration = $profile 
+            ? sprintf '%.4f secs', $profile->attributes->{profiler_duration}
+            : "???";
+
+        $html .= <<ROW;
+<tr><td>$datetime</td><td>$method</td><td>$path</td><td>$duration</td>
+<td><a href="/profile/show/$file/index.html">View</a></td>
+</tr>
+ROW
     }
+
+    $html .= "</table";
+
     $c->response->body($html);
 }
 
-sub show : Local {
+
+#sub show : Local {
+#    my ($self, $c) = @_;
+sub show : Regex('show/(.+)') {
     my ($self, $c) = @_;
 
     # FIXME: it would be cleaner to use arguments, but I can't remember how
     # to do the Catalyst equivalent of Dancer's get '/foo/**' => sub { ... }
     # to match /foo/bar, /foo/bar/index.html etc.
-    my $requested_path = $c->request->path;
-    $requested_path =~ s{^profile/show/}{};
+    #my $requested_path = $c->request->path;
+    #$requested_path =~ s{^profile/show/}{};
+    my $requested_path = $c->request->captures->[0];
 
     my ($profile, $html_path) = split '/', $requested_path, 2;
 
@@ -74,6 +127,8 @@ sub show : Local {
         );
         if ($? != 0) {
             die sprintf "%s exited with value %d", $nytprofhtml_path, $?;
+        } else {
+            $c->log->debug("Successfully generated HTML output");
         }
     }
 
