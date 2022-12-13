@@ -38,16 +38,25 @@ sub index : Local {
     my $html = <<HTML;
 <h1>NYTProf profiling management</h1>
 
-<b>PATH: $nytprof_output_dir</b>
+<style>
+table {
+  border-collapse: collapse;
+  font-size: 9px;
+  font-family: Source Code Pro, monospace;
+}
+table td {
+    padding: 3px;
+}
+</style>
 
 <h2>Profiled requests...</h2>
 
-<table>
+<table border="1" cellspacing="5">
 <tr>
-<th>Datetime</th>
 <th>Method</th>
 <th>Path</th>
 <th>Time taken</th>
+<th>Datetime</th>
 <th>View</th>
 </tr>
 HTML
@@ -80,7 +89,8 @@ HTML
             : "???";
 
         $html .= <<ROW;
-<tr><td>$datetime</td><td>$method</td><td>$path</td><td>$duration</td>
+<tr><td>$method</td><td>$path</td><td>$duration</td>
+<td>$datetime</td>
 <td><a href="/nytprof/show/$file/index.html">View</a></td>
 </tr>
 ROW
@@ -142,7 +152,7 @@ sub show :Local {
         Path::Tiny::path(
             $profile_html_dir,
             $file,
-        )->slurp,
+        )->slurp_utf8,
     );
 }
 
