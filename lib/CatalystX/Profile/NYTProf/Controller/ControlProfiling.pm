@@ -81,7 +81,7 @@ HTML
 
         $html .= <<ROW;
 <tr><td>$datetime</td><td>$method</td><td>$path</td><td>$duration</td>
-<td><a href="/profile/show/$file/index.html">View</a></td>
+<td><a href="/nytprof/show/$file/index.html">View</a></td>
 </tr>
 ROW
     }
@@ -94,26 +94,27 @@ ROW
 
 #sub show : Local {
 #    my ($self, $c) = @_;
-sub show : Regex('show/(.+)') {
-    my ($self, $c) = @_;
+#sub show :Local :Regex('show/(.+)') {
+sub show :Local {
+    my ($self, $c, $profile_dir, $file) = @_;
 
     # FIXME: it would be cleaner to use arguments, but I can't remember how
     # to do the Catalyst equivalent of Dancer's get '/foo/**' => sub { ... }
     # to match /foo/bar, /foo/bar/index.html etc.
     #my $requested_path = $c->request->path;
     #$requested_path =~ s{^profile/show/}{};
-    my $requested_path = $c->request->captures->[0];
 
-    my ($profile, $html_path) = split '/', $requested_path, 2;
+
+    $file ||= 'index.html';
 
     my $profile_path = Path::Tiny::path(
         $nytprof_output_dir,
-        $profile,
+        $profile_dir,
     );
     my $profile_html_dir = Path::Tiny::path(
         $nytprof_output_dir,
         'html',
-        $profile,
+        $profile_dir,
     );
     if (!-d $profile_html_dir) {
         # We need to run nytprofhtml first to generate the output
@@ -135,12 +136,12 @@ sub show : Regex('show/(.+)') {
     # OK, send the content
     # Should maybe consider letting Catalyst::Plugin::Static::Simple handle
     # serving the generated HTML - but we need to make sure it's generated
-    # first anyway...
-    $c->log->debug("Send HTML content from $profile_html_dir");
+    # first anyway, so...
+    $c->log->debug("Send HTML content from [$profile_html_dir][$file]");
     $c->response->body(
         Path::Tiny::path(
             $profile_html_dir,
-            $html_path,
+            $file,
         )->slurp,
     );
 }

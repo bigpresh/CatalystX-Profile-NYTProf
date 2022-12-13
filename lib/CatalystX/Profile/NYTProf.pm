@@ -8,6 +8,7 @@ use namespace::autoclean;
  
 use CatalystX::InjectComponent;
 use Data::UUID;
+use DateTime;
 use DDP;
 use Path::Tiny;
 
@@ -44,7 +45,7 @@ after 'setup_components' => sub {
     CatalystX::InjectComponent->inject(
         into => $class,
         component => 'CatalystX::Profile::NYTProf::Controller::ControlProfiling',
-        as => 'Controller::Profile'
+        as => 'Controller::NYTProf'
     );
 };
 
@@ -57,7 +58,7 @@ after 'prepare_body' => sub {
 
     # Don't try to profile requests to our profile viewing/managing URLs
     # as that would be a bit silly, wouldn't it?
-    return if $c->request->path =~ m{^profile/};
+    return if $c->request->path =~ m{^nytprof/};
 
     # Also don't profile requests for static content or favicons, for 
     # similar reasons
