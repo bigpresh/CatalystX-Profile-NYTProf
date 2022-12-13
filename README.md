@@ -1,22 +1,23 @@
-CatalystX-Profile-NYTProf
+# CatalystX-Profile-NYTProf
 
-Easy per-request profiling using the excellent Devel::NYTProf profiler,
+Easy per-request profiling using the excellent [Devel::NYTProf][nytprof] profiler,
 with built in routes (URLs) to serve up a list of profiled requests and
 their execution time, and allow you to generate & view Devel::NYTProf's
 detailed HTML reports with a single click.
 
 
-Devel::NYTProf: https://metacpan.org/pod/Devel::NYTProf
+[nytprof]: https://metacpan.org/pod/Devel::NYTProf
 
 
-USAGE
+## USAGE
 
 In your app, load CatalystX::Profile::NYTProf with:
 
+```
   with 'CatalystX::Profile::NYTProf';
+```
 
-
-INSTALLATION
+## INSTALLATION
 
 To install this module, run the following commands:
 
@@ -25,12 +26,16 @@ To install this module, run the following commands:
 	make test
 	make install
 
-SUPPORT AND DOCUMENTATION
+Or install using `cpanm`, `cpan`, `cpanplus` or howver you like.
+
+## SUPPORT AND DOCUMENTATION
 
 After installing, you can find documentation for this module with the
 perldoc command.
 
+```
     perldoc CatalystX::Profile::NYTProf
+```
 
 You can also look for information at:
 
