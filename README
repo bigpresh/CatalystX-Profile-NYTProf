@@ -1,15 +1,19 @@
 CatalystX-Profile-NYTProf
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+Easy per-request profiling using the excellent Devel::NYTProf profiler,
+with built in routes (URLs) to serve up a list of profiled requests and
+their execution time, and allow you to generate & view Devel::NYTProf's
+detailed HTML reports with a single click.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+
+Devel::NYTProf: https://metacpan.org/pod/Devel::NYTProf
+
+
+USAGE
+
+In your app, load CatalystX::Profile::NYTProf with:
+
+  with 'CatalystX::Profile::NYTProf';
 
 
 INSTALLATION
@@ -42,7 +46,7 @@ You can also look for information at:
 
 LICENSE AND COPYRIGHT
 
-This software is Copyright (c) 2021 by David Precious.
+This software is Copyright (c) 2022 by David Precious.
 
 This is free software, licensed under:
 
